@@ -18,7 +18,7 @@ ul {
 }
 
 .btn-width {
-    width: 25% !important; /* Set your desired width */
+    width: 25% !important;
 }
 
 .carousel__body {
@@ -40,6 +40,7 @@ ul {
 
     .carousel__body {
         min-height: 340px;
+        min-width: 100%;
     }
 
   }
