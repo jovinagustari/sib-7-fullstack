@@ -1,0 +1,113 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+const cars = require("../data/cars.original.json");
+
+const ALLOWED_CAPACITY = [
+  2, 
+  4, 
+  6
+];
+const DRIVER_TYPES = ["self-drive", "with-driver"];
+
+const DATA_DIRECTORY = path.join(__dirname, '../data');
+const MIN_OUTPUT_PATH = path.join(DATA_DIRECTORY, 'cars.min.json');
+const OUTPUT_PATH = path.join(DATA_DIRECTORY, 'cars.json');
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getRandomCapacity() {
+  const ridx = Math.floor(Math.random() * ALLOWED_CAPACITY.length)
+  return ALLOWED_CAPACITY[ridx]
+}
+
+function getCarImage(idx) {
+  const imageFile = `car${(idx + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 })}.min.jpg` 
+  return `./images/${imageFile}`;
+}
+
+function generateDescription(list) {
+  let description = '';
+  let descriptionLength = 0;
+  let i = 0;
+
+  while (descriptionLength < 124 && i < list.length) {
+    const sentence = list[i];
+
+    i++
+
+    if ((descriptionLength + sentence.length) > 124)
+      return description;
+
+    description = description.concat(" ", sentence, ".");
+    descriptionLength += sentence.length;
+  }
+
+  return description;
+}
+
+function getRandomPrice() {
+  const head = getRandomInt(1, 10);
+
+  return head * 100000;
+}
+
+function getRandomDriverType() {
+  const index = Math.floor(Math.random() * DRIVER_TYPES.length);
+  return DRIVER_TYPES[index];
+}
+
+const getRandomAvailableDate = () => {
+  const today = new Date();
+  const nextMonth = new Date(today);
+  nextMonth.setDate(today.getDate() + 25);
+
+  // Random date within the next month
+  const randomDate = new Date(today.getTime() + Math.random() * (nextMonth - today));
+  const availableDate = randomDate.toISOString().split('T')[0]; // Format as "YYYY-MM-DD"
+  return availableDate;
+};
+
+const getRandomAvailableTime = () => {
+  // Random time between 06:00 and 18:00
+  const randomHour = Math.floor(Math.random() * (18 - 6 + 1)) + 6; 
+  const availableTime = `${randomHour.toString().padStart(2, '0')}:00`;
+  return availableTime;
+};
+
+const ccars = cars.map((car, idx) => {
+  const capacity = getRandomCapacity();
+  const description = generateDescription([...car.specs, ...car.options]);
+  const rentPerDay = getRandomPrice();
+  const image = getCarImage(idx);
+  const driverType = getRandomDriverType();
+  const availableDate = getRandomAvailableDate();
+  const availableTime = getRandomAvailableTime();
+
+  return {
+    id: car.id,
+    plate: car.plate,
+    manufacture: car.manufacture,
+    model: car.model,
+    image,
+    rentPerDay,
+    capacity,
+    description,
+    driverType,
+    availableAt: new Date(),
+    availableDate,
+    availableTime,
+    ...car,
+  }
+})
+
+const minCarsJSON = JSON.stringify(ccars);
+const carsJSON = JSON.stringify(ccars, null, 2);
+
+fs.writeFileSync(MIN_OUTPUT_PATH, minCarsJSON);
+fs.writeFileSync(OUTPUT_PATH, carsJSON);
